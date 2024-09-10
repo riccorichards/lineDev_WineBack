@@ -6,7 +6,7 @@ export interface WineInputType {
   // Core fields
   image: string;
   url: string | null;
-  price: string;
+  price: number;
   year?: string;
   alcohol?: number;
   brand?: string;
@@ -34,7 +34,7 @@ export interface WineInputType {
 export interface UpdateWineInputType {
   image?: string;
   url?: string | null;
-  price?: string;
+  price?: number;
   year?: string;
   alcohol?: number;
   brand?: string;

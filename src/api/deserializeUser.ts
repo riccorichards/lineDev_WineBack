@@ -16,6 +16,7 @@ export const deserializeUser = async (
       /^Bearer\s/,
       ""
     );
+    
     const refreshToken = get(req, "headers.x-refresh") as string; // Custom header for refresh token
     // If no access token is present, proceed to the next middleware
     if (!accessToken) return next();

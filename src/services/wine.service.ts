@@ -9,6 +9,7 @@ import {
 } from "../utils/errors/appError.utils";
 import { merge } from "lodash";
 import { MongooseTypeObject } from "../dto/dto.customer";
+import { CreateWineInput } from "../api/validation/wine";
 
 class WineService {
   private repository: WineRepository;
@@ -19,9 +20,11 @@ class WineService {
     this.catRepo = new CategoryRepository();
   }
 
-  async CreateWineService(input: WineInputType) {
+  async CreateWineService(input: CreateWineInput) {
     const { categoryId } = input;
-    const category = await this.catRepo.GetCategoryById(categoryId);
+    const category = await this.catRepo.GetCategoryById(
+      new Types.ObjectId(categoryId)
+    );
     if (!category)
       throw new NotFoundError("Category was not found by provided ID.");
     const wine = await this.repository.CreateWine(input);
@@ -66,7 +69,7 @@ class WineService {
 
   async GetWineService(wineId: string) {
     const wine = await this.repository.GetWine(new Types.ObjectId(wineId));
-    if (!wine) throw new NotFoundError("Wine not found");
+    if (!wine) throw new NotFoundError("Wine was not found.");
     return wine;
   }
 
@@ -78,13 +81,69 @@ class WineService {
     return true;
   }
 
-  // async FilterWineService(queries: FilterQueriesType) {
-  //   try {
-  //     return await this.repository.FilerWine(queries);
-  //   } catch (error: any) {
-  //     throw new Error(error.message);
-  //   }
-  // }
+  async SearchByTitleService(lang: string, title: string) {
+    if (!lang || !title) throw new BadRequestError("Invalid query format.");
+    const searchField =
+      lang === "en" ? "titleTranslations.en" : "titleTranslations.ge";
+    const searchResult = await this.repository.SearchByTitle(
+      searchField,
+      title
+    );
+    if (searchResult.length < 1) throw new NotFoundError("Wine was not found.");
+
+    return searchResult.map((item) => {
+      return {
+        title:
+          lang === "en" ? item.titleTranslations.en : item.titleTranslations.ge,
+        image: item.image,
+        price: item.price,
+      };
+    });
+  }
+
+  async GetWineFilters(target: string) {
+    const filters = await this.repository.GetWineFilters(target);
+    if (!filters) throw new NotFoundError("Wine was not found provded query.");
+    return filters;
+  }
+
+  async GetWinePriceRangeService(minPrice: number, maxPrice: number) {
+    const result = await this.repository.GetWinePriceRange(minPrice, maxPrice);
+    if (result.length < 1)
+      throw new NotFoundError(
+        "Wine products was not found provided price range."
+      );
+
+    return result;
+  }
+
+  async GetPopularWinesService(page: number) {
+    const result = await this.repository.GetPopularWines(page);
+    if (!result) throw new ApiError();
+    return result;
+  }
+
+  async GetRelativeWinesService(catetogyId: MongooseTypeObject, page: number) {
+    const result = await this.repository.GetRelativeWines(catetogyId, page);
+    if (!result) throw new ApiError();
+    return result;
+  }
+
+  async GetWineStatsService(wineId: MongooseTypeObject) {
+    const result = await this.repository.GetWineById(wineId);
+    if (!result) throw new NotFoundError("Wine was not found provided ID.");
+    const inActionSum =
+      result.clickCount +
+      result.orderCount +
+      result.wishlistCount +
+      result.cartCount;
+    return {
+      viewPercentage: (result.clickCount / inActionSum) * 100,
+      wishlistPercentage: (result.wishlistCount / inActionSum) * 100,
+      cartPercentage: (result.cartCount / inActionSum) * 100,
+      orderPercentage: (result.orderCount / inActionSum) * 100,
+    };
+  }
 }
 
 export default WineService;

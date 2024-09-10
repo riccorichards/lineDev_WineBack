@@ -6,7 +6,7 @@ export interface CocktailInputType {
   // Core fields
   image: string;
   url: string | null;
-  price: string;
+  price: number;
   alcohol?: number;
   available?: boolean;
   discount?: number;
@@ -28,7 +28,7 @@ export interface CocktailInputType {
 export interface UpdateCocktailInputType {
   image?: string;
   url?: string | null;
-  price?: string;
+  price?: number;
   alcohol?: number;
   available?: boolean;
   discount?: number;

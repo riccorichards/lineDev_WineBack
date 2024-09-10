@@ -62,6 +62,53 @@ class CocktailRepository {
       { new: true }
     );
   }
+
+  async SearchByTitle(searchField: string, title: string) {
+    const regex = new RegExp(title, "i");
+    return await CocktailModel.find({
+      [searchField]: { $regex: regex },
+    });
+  }
+
+  async GetCocktailPriceRange(minPrice: number, maxPrice: number) {
+    return await CocktailModel.find({
+      price: { $gte: minPrice, $lte: maxPrice },
+    }).select("titleTranslations price discount image");
+  }
+
+  async GetPopularCocktails(page: number = 0, limit: number = 3) {
+    return await CocktailModel.aggregate([
+      {
+        $project: {
+          image: 1,
+          titleTranslations: 1,
+          price: {
+            $toString: "$price",
+          },
+          discount: 1,
+          popularityScore: {
+            $add: [
+              { $multiply: ["$clickCount", 0.1] },
+              { $multiply: ["$cartCount", 0.3] },
+              { $multiply: ["$wishlistCount", 0.2] },
+              { $multiply: ["$orderCount", 0.4] },
+            ],
+          },
+        },
+      },
+      { $sort: { popularityScore: -1 } },
+      { $skip: page * limit },
+      { $limit: limit },
+    ]);
+  }
+
+  async GetRelativeCocktails(categoryId: MongooseTypeObject, page: number = 0) {
+    const limit = 3;
+    return await CocktailModel.find({ categoryId })
+      .skip(limit * page)
+      .limit(limit)
+      .select("titleTranslations price discount image");
+  }
 }
 
 export default CocktailRepository;

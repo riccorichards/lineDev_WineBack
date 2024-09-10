@@ -11,6 +11,7 @@ import {
   NotFoundError,
 } from "../utils/errors/appError.utils";
 import { merge } from "lodash";
+import { MongooseTypeObject } from "../dto/dto.customer";
 
 class CocktailService {
   private repository: CocktailRepository;
@@ -77,6 +78,75 @@ class CocktailService {
       throw new NotFoundError("Cocktail was not found to be removed.");
 
     return true;
+  }
+
+  async SearchByTitleService(lang: string, title: string) {
+    if (!lang || !title) throw new BadRequestError("Invalid query format.");
+    const searchField =
+      lang === "en" ? "titleTranslations.en" : "titleTranslations.ge";
+
+    const searchResult = await this.repository.SearchByTitle(
+      searchField,
+      title
+    );
+
+    if (searchResult.length < 1)
+      throw new NotFoundError("Cocktails was not found.");
+
+    return searchResult.map((item) => {
+      return {
+        title:
+          lang === "en" ? item.titleTranslations.en : item.titleTranslations.ge,
+        image: item.image,
+        price: item.price,
+      };
+    });
+  }
+
+  async GetCocktailPriceRangeService(minPrice: number, maxPrice: number) {
+    const result = await this.repository.GetCocktailPriceRange(
+      minPrice,
+      maxPrice
+    );
+    if (result.length < 1)
+      throw new NotFoundError(
+        "Cocktail products was not found provided price range."
+      );
+
+    return result;
+  }
+
+  async GetPopularCocktailsService(page: number) {
+    const result = await this.repository.GetPopularCocktails(page);
+    if (!result) throw new ApiError();
+    return result;
+  }
+
+  async GetRelativeCocktailsService(
+    catetogyId: MongooseTypeObject,
+    page: number
+  ) {
+    const result = await this.repository.GetRelativeCocktails(catetogyId, page);
+    if (!result) throw new ApiError();
+    return result;
+  }
+
+  async GetCocktailStatsService(productId: MongooseTypeObject) {
+    const result = await this.repository.GetCocktailById(productId);
+    if (!result) throw new NotFoundError("Wine was not found provided ID.");
+
+    const inActionSum =
+      result.clickCount +
+      result.orderCount +
+      result.wishlistCount +
+      result.cartCount;
+      
+    return {
+      viewPercentage: (result.clickCount / inActionSum) * 100,
+      wishlistPercentage: (result.wishlistCount / inActionSum) * 100,
+      cartPercentage: (result.cartCount / inActionSum) * 100,
+      orderPercentage: (result.orderCount / inActionSum) * 100,
+    };
   }
 }
 

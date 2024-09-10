@@ -11,10 +11,7 @@ const createCocktailBody = object({
     required_error: "Image is Required!",
   }),
   url: string().url("Invalid URL format").nullable().optional(), // Ensures the URL is in a valid format, allowing null
-  price: string().refine(
-    (value) => !isNaN(parseFloat(value)) && parseFloat(value) > 0,
-    { message: "Price must be a positive number" }
-  ),
+  price: number().min(1, "Price must be a positive number"),
   alcohol: number()
     .min(0, "Alcohol content must be at least 0%")
     .max(100, "Alcohol content cannot exceed 100%")
@@ -44,11 +41,7 @@ const updateCocktailBody = object({
     required_error: "Image is Required!",
   }).optional(),
   url: string().url("Invalid URL format").nullable().optional(), // Ensures the URL is in a valid format, allowing null
-  price: string()
-    .refine((value) => !isNaN(parseFloat(value)) && parseFloat(value) > 0, {
-      message: "Price must be a positive number",
-    })
-    .optional(),
+  price: number().min(1, "Price must be a positive number").optional(),
   alcohol: number()
     .min(0, "Alcohol content must be at least 0%")
     .max(100, "Alcohol content cannot exceed 100%")

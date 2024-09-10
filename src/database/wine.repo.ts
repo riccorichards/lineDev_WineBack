@@ -1,13 +1,10 @@
-import {
-  WineInputType,
-  UpdateWineInputType,
-  FilterQueriesType,
-} from "../dto/dto.wine";
+import { UpdateWineInputType } from "../dto/dto.wine";
 import WineModel from "../models/wine";
 import { MongooseTypeObject } from "../dto/dto.customer";
+import { CreateWineInput } from "../api/validation/wine";
 
 class WineRepository {
-  async CreateWine(input: WineInputType) {
+  async CreateWine(input: CreateWineInput) {
     return await WineModel.create({
       ...input,
       feedback: [],
@@ -52,43 +49,6 @@ class WineRepository {
     return await WineModel.deleteOne({ _id: WineId });
   }
 
-  async FilerWineProperties(queries: FilterQueriesType) {
-    try {
-      // Extract query parameters
-      const {
-        year,
-        region,
-        country,
-        technology,
-        alcohol,
-        brand,
-        price,
-        familyCellar,
-        grapesVariety,
-        available,
-      } = queries;
-
-      // Build a dynamic query object based on provided query parameters
-      const query: any = {};
-
-      if (year) query.year = year;
-      if (region) query.region = region;
-      if (country) query.country = country;
-      if (technology) query.technology = technology;
-      if (alcohol) query.alcohol = { $eq: alcohol }; // Assuming alcohol is a string or number
-      if (brand) query.brand = brand;
-      if (price) query.price = { $lte: price }; // Example to filter wines with price less than or equal to the specified value
-      if (familyCellar) query.familyCellar = familyCellar;
-      if (grapesVariety) query.grapesVariety = grapesVariety;
-      if (available) query.available = available === "true"; // Assuming available is a boolean
-
-      // Execute the query
-      return await WineModel.find(query);
-    } catch (error: any) {
-      return error.message;
-    }
-  }
-
   async IncreaseWineByOne(productId: string) {
     return await WineModel.findByIdAndUpdate(
       productId,
@@ -103,6 +63,70 @@ class WineRepository {
       { $inc: { cartCount: 1 } },
       { new: true }
     );
+  }
+
+  async SearchByTitle(searchField: string, title: string) {
+    const regex = new RegExp(title, "i");
+    return await WineModel.find({
+      [searchField]: { $regex: regex },
+    }).select("titleTranslations price discount image");
+  }
+
+  async GetWineFilters(filters: string) {
+    if (filters === "available") {
+      return await WineModel.find({ available: true }).select(
+        "titleTranslations price discount image"
+      );
+    } else if (filters === "latest") {
+      return await WineModel.find()
+        .sort({ createdAt: -1 })
+        .select("titleTranslations price discount image");
+    } else if (filters === "cheapest") {
+      return await WineModel.find()
+        .sort({ price: 1 })
+        .select("titleTranslations price discount image");
+    }
+  }
+
+  async GetWinePriceRange(minPrice: number, maxPrice: number) {
+    return await WineModel.find({
+      price: { $gte: minPrice, $lte: maxPrice },
+    }).select("titleTranslations price discount image");
+  }
+
+  async GetPopularWines(page: number = 0) {
+    const limit = 3;
+    return await WineModel.aggregate([
+      {
+        $project: {
+          image: 1,
+          titleTranslations: 1,
+          price: {
+            $toString: "$price",
+          },
+          discount: 1,
+          popularityScore: {
+            $add: [
+              { $multiply: ["$clickCount", 0.1] },
+              { $multiply: ["$cartCount", 0.3] },
+              { $multiply: ["$wishlistCount", 0.2] },
+              { $multiply: ["$orderCount", 0.4] },
+            ],
+          },
+        },
+      },
+      { $sort: { popularityScore: -1 } },
+      { $skip: page * limit },
+      { $limit: limit },
+    ]);
+  }
+
+  async GetRelativeWines(categoryId: MongooseTypeObject, page: number = 0) {
+    const limit = 3;
+    return await WineModel.find({ categoryId })
+      .skip(limit * page)
+      .limit(limit)
+      .select("titleTranslations price discount image");
   }
 }
 

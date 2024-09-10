@@ -27,8 +27,21 @@ import {
   UpdateCategorySchemaType,
 } from "./validation/category";
 import {
+  CreateWineInput,
   CreateWineSchema,
+  filterQueryInput,
+  PopularProductSchema,
+  PopularQueryInput,
+  PriceRangeQueryInput,
+  PriceRangeQuerySchema,
+  ProductsStatsInput,
+  ProductsStatsSchema,
+  RelativeProductsInput,
+  RelativeProductsSchema,
+  SearchQueryInput,
+  SearchQuerySchema,
   UpdateWineSchema,
+  WineParamsInput,
   WineParamsSchema,
 } from "./validation/wine";
 
@@ -67,6 +80,7 @@ import {
 } from "./validation/feedback";
 import { Types } from "mongoose";
 import { requireRole } from "./requestUser";
+import ProductService from "../services/product.service";
 
 const api = (app: Application) => {
   const service = new CustomerService();
@@ -76,6 +90,7 @@ const api = (app: Application) => {
   const feedbackService = new FeedbackService();
   const blogService = new BlogService();
   const commentService = new CommentService();
+  const productService = new ProductService();
 
   app.post(
     "/signup",
@@ -413,7 +428,12 @@ const api = (app: Application) => {
     "/wine",
     validateIncomingData(CreateWineSchema),
     [deserializeUser, requireRole(true)],
-    async (req: Request, res: Response, next: NextFunction) => {
+    async (
+      req: Request<{}, {}, CreateWineInput>,
+      res: Response,
+      next: NextFunction
+    ) => {
+      const {} = req.body;
       try {
         return res
           .status(200)
@@ -461,6 +481,27 @@ const api = (app: Application) => {
         return res
           .status(200)
           .json(await wineService.GetWineService(req.params.wineId));
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get(
+    "/search-byName",
+    validateIncomingData(SearchQuerySchema),
+    async (
+      req: Request<{}, {}, {}, SearchQueryInput>,
+      res: Response,
+      next: NextFunction
+    ) => {
+      try {
+        const { lang, title, flag } = req.query;
+        const result =
+          flag === "wine"
+            ? await wineService.SearchByTitleService(lang, title)
+            : await cocktailService.SearchByTitleService(lang, title);
+        return res.status(200).json(result);
       } catch (error) {
         next(error);
       }
@@ -826,6 +867,169 @@ const api = (app: Application) => {
           .status(200)
           .json(
             await commentService.DeleteCommentService(req.params.commentId)
+          );
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get(
+    "/discount",
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        return res.status(200).json(await productService.GetDiscountService());
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get(
+    "/wine-filters",
+    async (
+      req: Request<{}, {}, {}, filterQueryInput>,
+      res: Response,
+      next: NextFunction
+    ) => {
+      try {
+        const { target } = req.query;
+        return res.status(200).json(await wineService.GetWineFilters(target));
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get(
+    "/price-range",
+    validateIncomingData(PriceRangeQuerySchema),
+    async (
+      req: Request<{}, {}, {}, PriceRangeQueryInput>,
+      res: Response,
+      next: NextFunction
+    ) => {
+      try {
+        const { minPrice, maxPrice, isWine } = req.query;
+
+        const min = Number(minPrice);
+        const max = Number(maxPrice);
+
+        const result =
+          isWine === "true"
+            ? await wineService.GetWinePriceRangeService(min, max)
+            : await cocktailService.GetCocktailPriceRangeService(min, max);
+
+        return res.status(200).json(result);
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get(
+    "/popular-products",
+    validateIncomingData(PopularProductSchema),
+    async (
+      req: Request<{}, {}, {}, PopularQueryInput>,
+      res: Response,
+      next: NextFunction
+    ) => {
+      try {
+        const { page, isWine } = req.query;
+        return res
+          .status(200)
+          .json(
+            isWine === "true"
+              ? await wineService.GetPopularWinesService(Number(page))
+              : await cocktailService.GetPopularCocktailsService(Number(page))
+          );
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get(
+    "/most-sold-products",
+    async (
+      req: Request<{}, {}, {}, { page: string }>,
+      res: Response,
+      next: NextFunction
+    ) => {
+      try {
+        const { page } = req.query;
+        return res
+          .status(200)
+          .json(await productService.GetMostSoldProductsService(Number(page)));
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get(
+    "/product-stats/:productId",
+    validateIncomingData(ProductsStatsSchema),
+    async (
+      req: Request<
+        ProductsStatsInput["params"],
+        {},
+        {},
+        ProductsStatsInput["query"]
+      >,
+      res: Response,
+      next: NextFunction
+    ) => {
+      try {
+        const { productId } = req.params;
+        const { isWine } = req.query;
+
+        return res
+          .status(200)
+          .json(
+            isWine === "true"
+              ? await wineService.GetWineStatsService(
+                  new Types.ObjectId(productId)
+                )
+              : await cocktailService.GetCocktailStatsService(
+                  new Types.ObjectId(productId)
+                )
+          );
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get(
+    "/relative-products/:categoryId",
+    validateIncomingData(RelativeProductsSchema),
+    async (
+      req: Request<
+        RelativeProductsInput["params"],
+        {},
+        {},
+        RelativeProductsInput["query"]
+      >,
+      res: Response,
+      next: NextFunction
+    ) => {
+      try {
+        const { isWine, page } = req.query;
+        const { categoryId } = req.params;
+        return res
+          .status(200)
+          .json(
+            isWine === "true"
+              ? await wineService.GetRelativeWinesService(
+                  new Types.ObjectId(categoryId),
+                  Number(page)
+                )
+              : await cocktailService.GetRelativeCocktailsService(
+                  new Types.ObjectId(categoryId),
+                  Number(page)
+                )
           );
       } catch (error) {
         next(error);

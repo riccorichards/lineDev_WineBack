@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { CartDocs } from "../dto/dto.comment";
+import { OrderDocs } from "../dto/dto.order";
 
 const order = new mongoose.Schema(
   {
@@ -11,6 +11,6 @@ const order = new mongoose.Schema(
   { timestamps: true }
 );
 
-const OrderModel = mongoose.model<CartDocs>("OrderItem", order);
+const OrderModel = mongoose.model<OrderDocs>("Orders", order);
 
 export default OrderModel;

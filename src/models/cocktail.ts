@@ -6,8 +6,9 @@ const Cocktail = new mongoose.Schema(
     // Fields that don't need translation
     image: { type: String },
     url: { type: String },
-    price: { type: String },
+    price: { type: Number },
     alcohol: { type: Number },
+    discount: { type: Number },
     available: { type: Boolean },
     titleTranslations: { en: { type: String }, ge: { type: String } },
     descTranslations: { en: { type: String }, ge: { type: String } },
