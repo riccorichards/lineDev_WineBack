@@ -40,7 +40,7 @@ export interface CartType {
   title: string;
   image: string;
   url: null | string;
-  price: string;
+  price: number;
   unit: number;
   productType: "wine" | "cocktail";
 }
@@ -63,7 +63,7 @@ export interface WishlistType {
   title: string;
   image: string;
   url: null | string;
-  price: string;
+  price: number;
   productType: "wine" | "cocktail";
 }
 

@@ -45,6 +45,7 @@ export const generateNewAccessToken = async (refreshToken: string) => {
     { expiresIn: 24 * 60 * 60 } // Expires in one days
   );
 
+  console.log({ newRefreshToken });
   // Return both the new access token and the new refresh token
   return {
     accessToken,

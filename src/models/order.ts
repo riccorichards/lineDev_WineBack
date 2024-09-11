@@ -4,9 +4,15 @@ import { OrderDocs } from "../dto/dto.order";
 const order = new mongoose.Schema(
   {
     customerId: { type: String },
-    productId: { type: String },
     totalAmount: { type: Number },
-    orderItem: [{ type: mongoose.Schema.Types.ObjectId, ref: "OrderItem" }],
+    userAddress: { type: String },
+    username: { type: String },
+    email: { type: String },
+    phone: { type: String },
+    note: { type: String, default: null },
+    paymentStatus: { type: String, enum: ["Pending", "Complete", "Reject"] },
+    deliveryStatus: { type: String, enum: ["Pending", "Complete", "Reject"] },
+    orderItems: [{ type: mongoose.Schema.Types.ObjectId, ref: "OrderItems" }],
   },
   { timestamps: true }
 );

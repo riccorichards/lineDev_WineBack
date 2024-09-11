@@ -81,6 +81,8 @@ import {
 import { Types } from "mongoose";
 import { requireRole } from "./requestUser";
 import ProductService from "../services/product.service";
+import { OrderSchema, OrderType, UpdateOrderType } from "./validation/order";
+import OrderService from "../services/order.service";
 
 const api = (app: Application) => {
   const service = new CustomerService();
@@ -91,6 +93,7 @@ const api = (app: Application) => {
   const blogService = new BlogService();
   const commentService = new CommentService();
   const productService = new ProductService();
+  const orderService = new OrderService();
 
   app.post(
     "/signup",
@@ -287,6 +290,19 @@ const api = (app: Application) => {
     }
   );
 
+  app.get(
+    "/wishlist-item",
+    [deserializeUser, requireRole(false)],
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const userId = res.locals.user.user;
+        return res.status(201).json(await service.GetWishListInfo(userId));
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
   app.post(
     "/cart-item",
     [deserializeUser, requireRole(false)],
@@ -296,6 +312,19 @@ const api = (app: Application) => {
         return res
           .status(201)
           .json(await service.AddItemInCarttService(userId, req.body));
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get(
+    "/cart-item",
+    [deserializeUser, requireRole(false)],
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const userId = res.locals.user.user;
+        return res.status(201).json(await service.GetCartInfo(userId));
       } catch (error) {
         next(error);
       }
@@ -649,13 +678,24 @@ const api = (app: Application) => {
   );
 
   app.get(
-    "/customer-feedback/:author",
+    "/customer-feedback",
     [deserializeUser, requireRole(false)],
-    async (
-      req: Request<{ author: string }>,
-      res: Response,
-      next: NextFunction
-    ) => {
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const userId = res.locals.user.user;
+        return res
+          .status(200)
+          .json(await feedbackService.GetCustomerFeedbackService(userId));
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get(
+    "/customer-feedback-length",
+    [deserializeUser, requireRole(false)],
+    async (req: Request, res: Response, next: NextFunction) => {
       try {
         const userId = res.locals.user.user;
         return res
@@ -1031,6 +1071,133 @@ const api = (app: Application) => {
                   Number(page)
                 )
           );
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  // create order
+
+  app.post(
+    "/create-order",
+    validateIncomingData(OrderSchema),
+    [deserializeUser, requireRole(false)],
+    async (
+      req: Request<{}, {}, OrderType>,
+      res: Response,
+      next: NextFunction
+    ) => {
+      try {
+        const userId = res.locals.user.user;
+        const { userAddress, totalAmount, note } = req.body;
+        return res.status(201).json(
+          await orderService.CreateOrderService(userId, {
+            userAddress,
+            totalAmount,
+            note,
+          })
+        );
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get(
+    "/customer-orders",
+    [deserializeUser, requireRole(false)],
+    async (
+      req: Request<{}, {}, OrderType>,
+      res: Response,
+      next: NextFunction
+    ) => {
+      try {
+        const userId = res.locals.user.user;
+        return res
+          .status(201)
+          .json(await orderService.GetCustomerOrdersService(userId));
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get(
+    "/orders",
+    [deserializeUser, requireRole(true)],
+    async (
+      req: Request<{}, {}, OrderType>,
+      res: Response,
+      next: NextFunction
+    ) => {
+      try {
+        return res.status(201).json(await orderService.GetAllOrdersService());
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.put(
+    "/update-order/:orderId",
+    [deserializeUser, requireRole(true)],
+    async (
+      req: Request<UpdateOrderType["params"], {}, UpdateOrderType["body"]>,
+      res: Response,
+      next: NextFunction
+    ) => {
+      try {
+        const { orderId } = req.params;
+        const { deliveryStatus } = req.body;
+        return res
+          .status(201)
+          .json(
+            await orderService.UpdateOrderStatusService(orderId, deliveryStatus)
+          );
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get(
+    "/total-spend",
+    [deserializeUser, requireRole(false)],
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const userId = res.locals.user.user;
+        return res
+          .status(201)
+          .json(await orderService.GetTotalSpendByUserService(userId));
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get(
+    "/total-incoming",
+    [deserializeUser, requireRole(true)],
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        return res
+          .status(201)
+          .json(await orderService.GetTotalIncomingService());
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get(
+    "/lengthOf-orders",
+    [deserializeUser, requireRole(true)],
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        return res
+          .status(201)
+          .json(await orderService.GetLengthOfOrdersService());
       } catch (error) {
         next(error);
       }

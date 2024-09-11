@@ -73,14 +73,14 @@ class CocktailRepository {
   async GetCocktailPriceRange(minPrice: number, maxPrice: number) {
     return await CocktailModel.find({
       price: { $gte: minPrice, $lte: maxPrice },
-    }).select("titleTranslations price discount image");
+    }).select("titleTranslations price discount url");
   }
 
   async GetPopularCocktails(page: number = 0, limit: number = 3) {
     return await CocktailModel.aggregate([
       {
         $project: {
-          image: 1,
+          url: 1,
           titleTranslations: 1,
           price: {
             $toString: "$price",
@@ -107,7 +107,7 @@ class CocktailRepository {
     return await CocktailModel.find({ categoryId })
       .skip(limit * page)
       .limit(limit)
-      .select("titleTranslations price discount image");
+      .select("titleTranslations price discount url");
   }
 }
 

@@ -16,8 +16,13 @@ export interface OrderItemDocs extends OrderItemInputType, mongoose.Document {
 export interface OrderInputType {
   customerId: string;
   totalAmount: number;
-  orderItem: MongooseTypeObject[];
+  userAddress: string;
+  email: string;
+  phone: string;
+  note?: string;
+  orderItems: MongooseTypeObject[];
   paymentStatus: "Pending" | "Complete" | "Reject";
+  deliveryStatus: "Pending" | "Complete" | "Reject";
 }
 
 export interface OrderDocs extends OrderInputType, mongoose.Document {

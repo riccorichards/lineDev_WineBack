@@ -78,6 +78,16 @@ class FeedbackService {
     return customerFeed;
   }
 
+  async GetCustomerFeedbackLengthService(author: string) {
+    const customerFeed = await this.repository.GetCustomersFeedback(author);
+    if (!customerFeed)
+      throw new BadRequestError(
+        "Data is not available or customer was not found."
+      );
+
+    return customerFeed;
+  }
+
   async RemoveFeedbackService(feedId: string) {
     const removedChecker = await this.repository.RemoveFeedback(feedId);
     if (removedChecker.deletedCount < 1)

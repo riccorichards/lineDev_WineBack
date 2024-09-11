@@ -146,6 +146,12 @@ class CustomerService {
     return savedProfile.wishlist;
   }
 
+  async GetWishListInfo(userId: string) {
+    const profile = await this.repository.FindCustomerById(userId);
+    if (!profile) throw new NotFoundError("Error with find User");
+    return profile.wishlist;
+  }
+
   async AddItemInCarttService(userId: string, input: CartType) {
     const profile = await this.repository.FindCustomerById(userId);
 
@@ -182,6 +188,12 @@ class CustomerService {
 
     const savedProfile = await profile.save();
     return savedProfile.cart;
+  }
+
+  async GetCartInfo(userId: string) {
+    const profile = await this.repository.FindCustomerById(userId);
+    if (!profile) throw new NotFoundError("Error with find User");
+    return profile.cart;
   }
 }
 

@@ -26,7 +26,7 @@ const CustomerSchema = new mongoose.Schema(
         title: { type: String, required: true },
         image: { type: String, required: true },
         url: { type: String, default: null },
-        price: { type: String, required: true },
+        price: { type: Number, required: true },
       },
     ],
     cart: [
@@ -39,7 +39,7 @@ const CustomerSchema = new mongoose.Schema(
         title: { type: String },
         image: { type: String },
         url: { type: String, required: false },
-        price: { type: String },
+        price: { type: Number },
         unit: { type: Number, required: true },
       },
     ],

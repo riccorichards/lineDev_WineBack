@@ -29,6 +29,7 @@ class FeedbackRepository {
   async RemoveFeedback(feedId: string) {
     return await FeedsModel.deleteOne({ _id: feedId });
   }
+  
 }
 
 export default FeedbackRepository;

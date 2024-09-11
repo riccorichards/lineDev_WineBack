@@ -69,29 +69,29 @@ class WineRepository {
     const regex = new RegExp(title, "i");
     return await WineModel.find({
       [searchField]: { $regex: regex },
-    }).select("titleTranslations price discount image");
+    }).select("titleTranslations price discount url");
   }
 
   async GetWineFilters(filters: string) {
     if (filters === "available") {
       return await WineModel.find({ available: true }).select(
-        "titleTranslations price discount image"
+        "titleTranslations price discount url"
       );
     } else if (filters === "latest") {
       return await WineModel.find()
         .sort({ createdAt: -1 })
-        .select("titleTranslations price discount image");
+        .select("titleTranslations price discount url");
     } else if (filters === "cheapest") {
       return await WineModel.find()
         .sort({ price: 1 })
-        .select("titleTranslations price discount image");
+        .select("titleTranslations price discount url");
     }
   }
 
   async GetWinePriceRange(minPrice: number, maxPrice: number) {
     return await WineModel.find({
       price: { $gte: minPrice, $lte: maxPrice },
-    }).select("titleTranslations price discount image");
+    }).select("titleTranslations price discount url");
   }
 
   async GetPopularWines(page: number = 0) {
@@ -99,7 +99,7 @@ class WineRepository {
     return await WineModel.aggregate([
       {
         $project: {
-          image: 1,
+          url: 1,
           titleTranslations: 1,
           price: {
             $toString: "$price",
@@ -126,7 +126,7 @@ class WineRepository {
     return await WineModel.find({ categoryId })
       .skip(limit * page)
       .limit(limit)
-      .select("titleTranslations price discount image");
+      .select("titleTranslations price discount url");
   }
 }
 
