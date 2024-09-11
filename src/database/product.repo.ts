@@ -10,7 +10,9 @@ class ProductRepository {
       .limit(limit)
       .select("titleTranslations price discount url");
 
-    return [...wines, ...coctails];
+    return [...wines, ...coctails].sort(
+      (a, b) => (b.discount || 0) - (a.discount || 0)
+    );
   }
 
   async GetMostSoldProducts(limit = 3, page = 0) {
