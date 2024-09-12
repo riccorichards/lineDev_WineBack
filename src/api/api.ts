@@ -4,6 +4,8 @@ import { validateIncomingData } from "./validation/validateResources";
 import {
   CreateCustomerSchema,
   CreateCustomerSchemaType,
+  InPeriodQueryType,
+  InPerionQuerySchema,
   UpdateCustomerSchema,
   UpdateCustomerSchemaType,
 } from "./validation/customerVal/customer";
@@ -525,11 +527,11 @@ const api = (app: Application) => {
       next: NextFunction
     ) => {
       try {
-        const { lang, title, flag } = req.query;
+        const { title, flag } = req.query;
         const result =
           flag === "wine"
-            ? await wineService.SearchByTitleService(lang, title)
-            : await cocktailService.SearchByTitleService(lang, title);
+            ? await wineService.SearchByTitleService(title)
+            : await cocktailService.SearchByTitleService(title);
         return res.status(200).json(result);
       } catch (error) {
         next(error);
@@ -700,7 +702,27 @@ const api = (app: Application) => {
         const userId = res.locals.user.user;
         return res
           .status(200)
-          .json(await feedbackService.GetCustomerFeedbackService(userId));
+          .json(await feedbackService.GetCustomerFeedbackLengthService(userId));
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get(
+    "/active-customers-length",
+    validateIncomingData(InPerionQuerySchema),
+    [deserializeUser, requireRole(true)],
+    async (
+      req: Request<{}, {}, {}, InPeriodQueryType>,
+      res: Response,
+      next: NextFunction
+    ) => {
+      try {
+        const { inPeriod } = req.query;
+        return res
+          .status(200)
+          .json(await service.ActiveCustomersService(inPeriod));
       } catch (error) {
         next(error);
       }
@@ -914,6 +936,7 @@ const api = (app: Application) => {
     }
   );
 
+  // filters
   app.get(
     "/discount",
     async (req: Request, res: Response, next: NextFunction) => {
@@ -1078,7 +1101,6 @@ const api = (app: Application) => {
   );
 
   // create order
-
   app.post(
     "/create-order",
     validateIncomingData(OrderSchema),
@@ -1198,6 +1220,21 @@ const api = (app: Application) => {
         return res
           .status(201)
           .json(await orderService.GetLengthOfOrdersService());
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get(
+    "/favorite-product",
+    [deserializeUser, requireRole(false)],
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const userId = res.locals.user.user;
+        return res
+          .status(201)
+          .json(await service.GetCustomerFavoriteProduct(userId));
       } catch (error) {
         next(error);
       }

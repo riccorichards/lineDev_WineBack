@@ -22,6 +22,7 @@ import {
 } from "../utils/errors/appError.utils";
 import WineRepository from "../database/wine.repo";
 import CocktailRepository from "../database/cocktail.repo";
+import OrderRepository from "../database/order.repo";
 
 class CustomerService {
   private repository: CustomerRepository;
@@ -153,6 +154,7 @@ class CustomerService {
   }
 
   async AddItemInCarttService(userId: string, input: CartType) {
+    console.log({ input });
     const profile = await this.repository.FindCustomerById(userId);
 
     if (!profile) throw new NotFoundError("Error with find User");
@@ -194,6 +196,14 @@ class CustomerService {
     const profile = await this.repository.FindCustomerById(userId);
     if (!profile) throw new NotFoundError("Error with find User");
     return profile.cart;
+  }
+
+  async ActiveCustomersService(inPeriod: string) {
+    return await this.repository.ActiveCustomers(inPeriod);
+  }
+
+  async GetCustomerFavoriteProduct(customerId: string) {
+    return await this.repository.GetCustomerFavoriteProduct(customerId);
   }
 }
 

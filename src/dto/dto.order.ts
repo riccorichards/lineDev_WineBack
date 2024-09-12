@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import { MongooseTypeObject } from "./dto.customer";
 
 export interface OrderItemInputType {
+  customerId: string;
+  productId: string;
   title: string;
   image: string;
   price: number;

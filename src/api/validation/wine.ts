@@ -113,7 +113,6 @@ const updateWineBody = object({
 // query validation
 export const SearchQuerySchema = object({
   query: object({
-    lang: string().refine((val) => val === "en" || val === "ge"),
     title: string().min(1, "Wine Title can't be less than 1 character."),
     flag: string().refine((val) => val === "wine" || val === "cocktail"),
   }),

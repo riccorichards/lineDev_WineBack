@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import { OrderItemDocs } from "../dto/dto.order";
 
 const OrderItem = new mongoose.Schema({
+  customerId: { type: String },
+  productId: { type: String },
   title: { type: String },
   price: { type: Number },
   unit: { type: Number },

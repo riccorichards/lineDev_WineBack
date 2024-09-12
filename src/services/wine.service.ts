@@ -81,20 +81,30 @@ class WineService {
     return true;
   }
 
-  async SearchByTitleService(lang: string, title: string) {
-    if (!lang || !title) throw new BadRequestError("Invalid query format.");
-    const searchField =
-      lang === "en" ? "titleTranslations.en" : "titleTranslations.ge";
+  async SearchByTitleService(title: string) {
+    const georgianRegex = /^[\u10A0-\u10FF]+$/;
+    const englishRegex = /^[A-Za-z]+$/;
+    let searchField: string = "";
+    if (title) {
+      if (georgianRegex.test(title)) {
+        searchField = "titleTranslations.ge";
+      } else if (englishRegex.test(title)) {
+        searchField = "titleTranslations.en";
+      }
+    }
+
     const searchResult = await this.repository.SearchByTitle(
       searchField,
       title
     );
+
     if (searchResult.length < 1) throw new NotFoundError("Wine was not found.");
 
     return searchResult.map((item) => {
       return {
-        title:
-          lang === "en" ? item.titleTranslations.en : item.titleTranslations.ge,
+        title: englishRegex.test(title)
+          ? item.titleTranslations.en
+          : item.titleTranslations.ge,
         image: item.image,
         price: item.price,
       };

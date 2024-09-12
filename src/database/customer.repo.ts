@@ -10,6 +10,8 @@ import {
   UpdateAddressSchemaType,
 } from "../api/validation/customerVal/address";
 import { MongooseTypeObject } from "../dto/dto.customer";
+import { periodSwitcher } from "../utils/periodSwitcher";
+import OrderItemModel from "../models/orderItem";
 
 class CustomerRepository {
   // create customer in db
@@ -60,6 +62,57 @@ class CustomerRepository {
 
   async FindCustomerByEmail(email: string) {
     return await CustomerModel.findOne({ email }).populate("address");
+  }
+
+  async ActiveCustomers(inPeriod: string) {
+    const { startDate, now } = periodSwitcher(inPeriod);
+    return await SessionModel.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate, $lte: now },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalSessions: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalSessions: 1,
+        },
+      },
+    ]);
+  }
+
+  async GetCustomerFavoriteProduct(customerId: string) {
+    return await OrderItemModel.aggregate([
+      {
+        $match: { customerId: customerId },
+      },
+      {
+        $group: {
+          _id: "$productId",
+          count: { $sum: 1 },
+          productDetails: { $first: "$$ROOT" }, // Get the first document for details (e.g., title, price)
+        },
+      },
+      {
+        $sort: { count: -1 }, // Sort by the count in descending order
+      },
+      {
+        $limit: 3, // Limit to the most frequently ordered product
+      },
+      {
+        $project: {
+          _id: 0,
+          count: 1, // Include the count
+          productDetails: 1, // Include product details
+        },
+      },
+    ]);
   }
 }
 

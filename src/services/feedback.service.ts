@@ -80,12 +80,13 @@ class FeedbackService {
 
   async GetCustomerFeedbackLengthService(author: string) {
     const customerFeed = await this.repository.GetCustomersFeedback(author);
+
     if (!customerFeed)
       throw new BadRequestError(
         "Data is not available or customer was not found."
       );
 
-    return customerFeed;
+    return customerFeed.length;
   }
 
   async RemoveFeedbackService(feedId: string) {

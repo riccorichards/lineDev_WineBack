@@ -31,6 +31,8 @@ class OrderService {
 
     const orderItems = cart.map((item) => {
       return {
+        customerId: userId,
+        productId: item.productId,
         title: item.title,
         price: item.price,
         unit: item.unit,

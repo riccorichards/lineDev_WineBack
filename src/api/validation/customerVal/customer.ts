@@ -61,6 +61,14 @@ export const UpdateCustomerSchema = object({
   query: object({}).optional(),
 });
 
+export const InPerionQuerySchema = object({
+  query: object({
+    inPeriod: string().refine(
+      (v) => v === "day" || v === "week" || v === "month"
+    ),
+  }),
+});
+
 // TypeScript types for request validation
 export type CreateCustomerSchemaType = Omit<
   TypeOf<typeof CreateCustomerSchema>["body"],
@@ -70,3 +78,5 @@ export type CreateCustomerSchemaType = Omit<
 export type UpdateCustomerSchemaType = TypeOf<
   typeof UpdateCustomerSchema
 >["body"]; // Type for UpdateCustomerSchema
+
+export type InPeriodQueryType = TypeOf<typeof InPerionQuerySchema>["query"];
