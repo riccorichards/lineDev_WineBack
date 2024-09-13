@@ -1,5 +1,3 @@
-import { boolean, string } from "zod";
-import mongoose from "mongoose";
 import {
   CreateCustomerSchemaType,
   UpdateCustomerSchemaType,
@@ -22,7 +20,6 @@ import {
 } from "../utils/errors/appError.utils";
 import WineRepository from "../database/wine.repo";
 import CocktailRepository from "../database/cocktail.repo";
-import OrderRepository from "../database/order.repo";
 
 class CustomerService {
   private repository: CustomerRepository;
@@ -46,16 +43,19 @@ class CustomerService {
     if (!profile) {
       throw new BadRequestError("Wrong credentials");
     }
+
     //if user was found we are checking its password
     const validPass = await profile.comparePass(input.password);
     if (!validPass) {
       throw new BadRequestError("Wrong credentials");
     }
+
     const newSession = await this.repository.CreateSession(
       profile._id as string,
       profile.isAdmin,
       userAgent
     );
+
     if (!newSession) throw new BadRequestError("Session creation failed");
     return newSession;
   }
@@ -154,7 +154,6 @@ class CustomerService {
   }
 
   async AddItemInCarttService(userId: string, input: CartType) {
-    console.log({ input });
     const profile = await this.repository.FindCustomerById(userId);
 
     if (!profile) throw new NotFoundError("Error with find User");
@@ -164,7 +163,6 @@ class CustomerService {
     const index = cart.findIndex(
       (item) => item.productId.toString() === input.productId.toString()
     );
-
     //if index is eques -1 that means item is the cart it not exist, so we can just add it in the cart
     if (index !== -1) {
       //if item is already there, we need to define is it great than 0 or not, it not we need to update the unit of that specific item
@@ -204,6 +202,18 @@ class CustomerService {
 
   async GetCustomerFavoriteProduct(customerId: string) {
     return await this.repository.GetCustomerFavoriteProduct(customerId);
+  }
+
+  async UpdateAdminStatusService(email: string) {
+    const profile = await this.repository.FindCustomerByEmail(email);
+    if (!profile)
+      throw new NotFoundError("Error with find User by provided Email.");
+    if (profile.isAdmin) {
+      profile.isAdmin = false;
+      return await profile.save();
+    }
+    profile.isAdmin = true;
+    return await profile.save();
   }
 }
 

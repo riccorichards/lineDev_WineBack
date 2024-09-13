@@ -57,7 +57,9 @@ class CustomerRepository {
   }
 
   async GetCustomers() {
-    return await CustomerModel.find().populate("address");
+    return await CustomerModel.find()
+      .populate("address")
+      .select("username email image address phone");
   }
 
   async FindCustomerByEmail(email: string) {

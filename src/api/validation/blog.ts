@@ -49,7 +49,14 @@ export const UpdateBlogSchema = object({
   query: object({}).optional(),
 });
 
+export const AllBlogsQuery = object({
+  query: object({
+    isLastThree: string().optional(),
+  }),
+});
+
 // Types for Create and Update
 export type CreateBlogInput = TypeOf<typeof CreateBlogSchema>["body"];
 export type UpdateBlogInput = TypeOf<typeof UpdateBlogSchema>;
 export type BlogParamsInput = TypeOf<typeof BlogParams>["params"];
+export type AllBlogsQueryInput = TypeOf<typeof AllBlogsQuery>["query"];

@@ -6,6 +6,8 @@ import {
   CreateCustomerSchemaType,
   InPeriodQueryType,
   InPerionQuerySchema,
+  UpdateAdminStatusQuery,
+  UpdateAdminStatusType,
   UpdateCustomerSchema,
   UpdateCustomerSchemaType,
 } from "./validation/customerVal/customer";
@@ -57,6 +59,8 @@ import {
 } from "./validation/cocktail";
 import CocktailService from "../services/cocktail.service";
 import {
+  AllBlogsQuery,
+  AllBlogsQueryInput,
   BlogParams,
   BlogParamsInput,
   CreateBlogInput,
@@ -122,6 +126,7 @@ const api = (app: Application) => {
     validateIncomingData(CreateSessionSchema),
     async (req: Request, res: Response, next: NextFunction) => {
       try {
+        console.log(req.body);
         const newSession = await service.SessionService(
           req.body,
           req.get("user-agent") || ""
@@ -336,7 +341,7 @@ const api = (app: Application) => {
   // category section
   app.get(
     "/categories",
-    // [deserializeUser, requireRole(true)],
+    [deserializeUser, requireRole(true)],
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         return res.status(200).json(await CatService.GetAllCategoriesService());
@@ -769,13 +774,28 @@ const api = (app: Application) => {
     }
   );
 
-  app.get("/blogs", async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      return res.status(200).json(await blogService.AllBlogsService());
-    } catch (error) {
-      next(error);
+  app.get(
+    "/blogs",
+    validateIncomingData(AllBlogsQuery),
+    async (
+      req: Request<{}, {}, {}, AllBlogsQueryInput>,
+      res: Response,
+      next: NextFunction
+    ) => {
+      try {
+        const { isLastThree } = req.query;
+        return res
+          .status(200)
+          .json(
+            isLastThree === "true"
+              ? (await blogService.AllBlogsService()).slice(0, 3)
+              : await blogService.AllBlogsService()
+          );
+      } catch (error) {
+        next(error);
+      }
     }
-  });
+  );
 
   app.get(
     "/blog/:blogId",
@@ -1235,6 +1255,26 @@ const api = (app: Application) => {
         return res
           .status(201)
           .json(await service.GetCustomerFavoriteProduct(userId));
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get(
+    "/admin-status",
+    validateIncomingData(UpdateAdminStatusQuery),
+    [deserializeUser, requireRole(true)],
+    async (
+      req: Request<{}, {}, {}, UpdateAdminStatusType>,
+      res: Response,
+      next: NextFunction
+    ) => {
+      try {
+        const { email } = req.query;
+        return res
+          .status(201)
+          .json(await service.UpdateAdminStatusService(email));
       } catch (error) {
         next(error);
       }

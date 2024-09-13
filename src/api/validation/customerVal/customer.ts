@@ -69,6 +69,12 @@ export const InPerionQuerySchema = object({
   }),
 });
 
+export const UpdateAdminStatusQuery = object({
+  query: object({
+    email: string({ required_error: "Email is Required." }),
+  }),
+});
+
 // TypeScript types for request validation
 export type CreateCustomerSchemaType = Omit<
   TypeOf<typeof CreateCustomerSchema>["body"],
@@ -80,3 +86,6 @@ export type UpdateCustomerSchemaType = TypeOf<
 >["body"]; // Type for UpdateCustomerSchema
 
 export type InPeriodQueryType = TypeOf<typeof InPerionQuerySchema>["query"];
+export type UpdateAdminStatusType = TypeOf<
+  typeof UpdateAdminStatusQuery
+>["query"];

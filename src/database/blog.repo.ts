@@ -15,7 +15,7 @@ class BlogRepository {
   }
 
   async GetAllBlogs() {
-    return BlogModel.find();
+    return BlogModel.find().sort({ createdAt: -1 });
   }
 
   async GetBlog(BlogId: string) {
